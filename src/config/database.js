@@ -4,10 +4,12 @@ const { open } = require('sqlite');
 const path = require('path');
 const fs = require('fs');
 
-const dbDir = path.join(__dirname, '..', '..', 'data');
+// Use /tmp for serverless environments like Vercel
+const isVercel = process.env.VERCEL === '1';
+const dbDir = isVercel ? '/tmp' : path.join(__dirname, '..', '..', 'data');
 const dbPath = path.join(dbDir, 'gym.db');
 
-if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+if (!isVercel && !fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
 let dbPromise = open({
   filename: dbPath,
