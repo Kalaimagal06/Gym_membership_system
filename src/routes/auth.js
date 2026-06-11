@@ -26,7 +26,7 @@ router.post(
         return res.status(400).json({ message: 'User already exists' });
       }
       const user = await User.create({ email, password });
-      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '1h' });
       // Send token in HttpOnly cookie
       res
         .cookie('token', token, { httpOnly: true, secure: false, sameSite: 'lax' })
@@ -58,7 +58,7 @@ router.post(
       if (!match) {
         return res.status(400).json({ message: 'Incorrect password.' });
       }
-      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '1h' });
       res
         .cookie('token', token, { httpOnly: true, secure: false, sameSite: 'lax' })
         .json({ message: 'Logged in', token });
