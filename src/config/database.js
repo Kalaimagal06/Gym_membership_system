@@ -1,41 +1,40 @@
 // src/config/database.js
-const sqlite3 = require('sqlite3');
-const { open } = require('sqlite');
+const fs = require('fs').promises;
 const path = require('path');
-const fs = require('fs');
 
-// Use /tmp for serverless environments like Vercel
 const isVercel = process.env.VERCEL === '1';
 const dbDir = isVercel ? '/tmp' : path.join(__dirname, '..', '..', 'data');
-const dbPath = path.join(dbDir, 'gym.db');
+const dbPath = path.join(dbDir, 'db.json');
 
-if (!isVercel && !fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+// Initialize database with default structure
+async function initDb() {
+  try {
+    if (!isVercel) {
+      await fs.mkdir(dbDir, { recursive: true });
+    }
+    try {
+      await fs.access(dbPath);
+    } catch {
+      await fs.writeFile(dbPath, JSON.stringify({ users: [], members: [] }, null, 2));
+    }
+  } catch (err) {
+    console.error('Failed to initialize database:', err);
+  }
+}
 
-let dbPromise = open({
-  filename: dbPath,
-  driver: sqlite3.Database
-}).then(async (db) => {
-  await db.exec('PRAGMA journal_mode = WAL;');
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id            INTEGER PRIMARY KEY AUTOINCREMENT,
-      email         TEXT    UNIQUE NOT NULL,
-      password_hash TEXT    NOT NULL,
-      created_at    TEXT    DEFAULT (datetime('now')),
-      updated_at    TEXT    DEFAULT (datetime('now'))
-    );
+initDb();
 
-    CREATE TABLE IF NOT EXISTS members (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
-      name            TEXT    NOT NULL,
-      age             INTEGER NOT NULL,
-      membership_type TEXT    NOT NULL DEFAULT 'basic',
-      start_date      TEXT    NOT NULL,
-      created_at      TEXT    DEFAULT (datetime('now')),
-      updated_at      TEXT    DEFAULT (datetime('now'))
-    );
-  `);
-  return db;
-});
+async function readDb() {
+  try {
+    const data = await fs.readFile(dbPath, 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    return { users: [], members: [] };
+  }
+}
 
-module.exports = { getDb: () => dbPromise };
+async function writeDb(data) {
+  await fs.writeFile(dbPath, JSON.stringify(data, null, 2));
+}
+
+module.exports = { readDb, writeDb };

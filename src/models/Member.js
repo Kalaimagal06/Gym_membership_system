@@ -1,38 +1,42 @@
 // src/models/Member.js
-const { getDb } = require('../config/database');
+const { readDb, writeDb } = require('../config/database');
 
 class Member {
   static async create({ name, age, membership_type, start_date }) {
-    const db = await getDb();
-    const result = await db.run(
-      'INSERT INTO members (name, age, membership_type, start_date) VALUES (?, ?, ?, ?)',
-      [name, age, membership_type, start_date]
-    );
-    return { id: result.lastID, name, age, membership_type, start_date };
+    const db = await readDb();
+    const id = db.members.length > 0 ? db.members[db.members.length - 1].id + 1 : 1;
+    const newMember = { id, name, age, membership_type, start_date, created_at: new Date().toISOString() };
+    db.members.push(newMember);
+    await writeDb(db);
+    return newMember;
   }
 
   static async findAll() {
-    const db = await getDb();
-    return db.all('SELECT * FROM members');
+    const db = await readDb();
+    return db.members;
   }
 
   static async findById(id) {
-    const db = await getDb();
-    return db.get('SELECT * FROM members WHERE id = ?', [id]);
+    const db = await readDb();
+    return db.members.find(m => m.id === parseInt(id));
   }
 
   static async update(id, { name, age, membership_type, start_date }) {
-    const db = await getDb();
-    await db.run(
-      'UPDATE members SET name = ?, age = ?, membership_type = ?, start_date = ? WHERE id = ?',
-      [name, age, membership_type, start_date, id]
-    );
-    return { id, name, age, membership_type, start_date };
+    const db = await readDb();
+    const index = db.members.findIndex(m => m.id === parseInt(id));
+    if (index === -1) return null;
+    db.members[index] = { ...db.members[index], name, age, membership_type, start_date, updated_at: new Date().toISOString() };
+    await writeDb(db);
+    return db.members[index];
   }
 
   static async delete(id) {
-    const db = await getDb();
-    await db.run('DELETE FROM members WHERE id = ?', [id]);
+    const db = await readDb();
+    const index = db.members.findIndex(m => m.id === parseInt(id));
+    if (index !== -1) {
+      db.members.splice(index, 1);
+      await writeDb(db);
+    }
     return { id };
   }
 }
