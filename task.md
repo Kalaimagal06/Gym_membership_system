@@ -1,0 +1,15 @@
+- [ ] Set up project scaffolding (package.json, install dependencies)
+- [ ] Create `.env` with DB credentials and JWT secret
+- [ ] Implement MySQL connection pool (`src/config/database.js`)
+- [ ] Define `User` model (`src/models/User.js`)
+- [ ] Define `Member` model (`src/models/Member.js`)
+- [ ] Create authentication routes (`src/routes/auth.js`)
+- [ ] Create JWT middleware (`src/middleware/authenticateToken.js`)
+- [ ] Secure member CRUD routes (`src/routes/members.js`)
+- [ ] Set up Express server (`src/app.js`)
+- [ ] Add CORS and body parsing middleware
+- [ ] Create basic static frontend (HTML/JS) under `public/`
+- [ ] Implement frontend auth flow (login, register, token handling)
+- [ ] Write README with setup instructions
+- [ ] Add simple automated tests for auth routes
+- [ ] Verify functionality manually via Postman or browser

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GymPro – Membership Management</title>
+  <meta name="description" content="Professional gym membership management system with secure login and member tracking." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== AUTH SCREEN ===== -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-bg">
+      <div class="auth-blob blob1"></div>
+      <div class="auth-blob blob2"></div>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-icon">💪</div>
+        <h1 class="logo-text">GymPro</h1>
+        <p class="logo-sub">Membership Management</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">Login</button>
+        <button id="tab-register" class="auth-tab" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" placeholder="you@example.com" required />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" placeholder="••••••••" required />
+        </div>
+        <div id="login-error" class="error-msg hidden"></div>
+        <button type="submit" class="btn-primary" id="login-btn">
+          <span class="btn-text">Sign In</span>
+          <span class="btn-spinner hidden">⏳</span>
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label for="reg-email">Email</label>
+          <input id="reg-email" type="email" placeholder="you@example.com" required />
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Password</label>
+          <input id="reg-password" type="password" placeholder="Min 6 characters" required minlength="6" />
+        </div>
+        <div id="register-error" class="error-msg hidden"></div>
+        <div id="register-success" class="success-msg hidden"></div>
+        <button type="submit" class="btn-primary" id="register-btn">
+          <span class="btn-text">Create Account</span>
+          <span class="btn-spinner hidden">⏳</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD SCREEN ===== -->
+  <div id="dashboard-screen" class="dashboard hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <span class="logo-icon-sm">💪</span>
+        <span>GymPro</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" href="#members">
+          <span class="nav-icon">👥</span> Members
+        </a>
+        <a class="nav-item" href="#stats">
+          <span class="nav-icon">📊</span> Overview
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div>
+            <div id="user-email-display" class="user-email">user@gym.com</div>
+            <div class="user-role">Administrator</div>
+          </div>
+        </div>
+        <button onclick="handleLogout()" class="btn-logout">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="dash-header">
+        <div>
+          <h2 class="dash-title">Member Management</h2>
+          <p class="dash-subtitle">Track and manage all gym members</p>
+        </div>
+        <button class="btn-primary" onclick="openModal()">+ Add Member</button>
+      </header>
+
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(99,102,241,.15);color:#818cf8">👥</div>
+          <div>
+            <div class="stat-num" id="stat-total">0</div>
+            <div class="stat-label">Total Members</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(16,185,129,.15);color:#34d399">🏅</div>
+          <div>
+            <div class="stat-num" id="stat-premium">0</div>
+            <div class="stat-label">Premium</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(245,158,11,.15);color:#fbbf24">⭐</div>
+          <div>
+            <div class="stat-num" id="stat-standard">0</div>
+            <div class="stat-label">Standard</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(239,68,68,.15);color:#f87171">🔰</div>
+          <div>
+            <div class="stat-num" id="stat-basic">0</div>
+            <div class="stat-label">Basic</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search bar -->
+      <div class="search-bar-container">
+        <span class="search-icon">🔍</span>
+        <input id="search-input" type="text" placeholder="Search members by name..." class="search-bar" oninput="filterMembers()" />
+      </div>
+
+      <!-- Members Table -->
+      <div class="table-wrapper">
+        <table class="members-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Age</th>
+              <th>Membership</th>
+              <th>Start Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="members-tbody">
+            <tr><td colspan="6" class="table-empty">Loading members...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== ADD / EDIT MODAL ===== -->
+  <div id="member-modal" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Add New Member</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <form id="member-form" onsubmit="handleSaveMember(event)">
+        <input type="hidden" id="edit-id" />
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="m-name">Full Name</label>
+              <input id="m-name" type="text" placeholder="John Doe" required />
+            </div>
+            <div class="form-group">
+              <label for="m-age">Age</label>
+              <input id="m-age" type="number" placeholder="25" min="1" max="120" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="m-type">Membership Type</label>
+              <select id="m-type" required>
+                <option value="">Select type…</option>
+                <option value="basic">Basic</option>
+                <option value="standard">Standard</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="m-date">Start Date</label>
+              <input id="m-date" type="date" required />
+            </div>
+          </div>
+          <div id="modal-error" class="error-msg hidden"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary" id="save-btn">Save Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== DELETE CONFIRM MODAL ===== -->
+  <div id="delete-modal" class="modal-backdrop hidden" onclick="closeDeleteModal(event)">
+    <div class="modal-card small-modal">
+      <div class="modal-header">
+        <h3>Delete Member</h3>
+        <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong id="delete-member-name"></strong>? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
