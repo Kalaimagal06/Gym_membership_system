@@ -1,134 +1,16 @@
 // public/app.js – Frontend Logic for GymPro
 
 const API = '';  // Same origin
-let authToken = localStorage.getItem('token') || '';
 let allMembers = [];
 let deleteTargetId = null;
-
-/* ────── AUTH ────── */
-function switchTab(tab) {
-  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
-  document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
-  document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
-}
-
-async function handleLogin(e) {
-  e.preventDefault();
-  const email    = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  const errEl    = document.getElementById('login-error');
-  const btn      = document.getElementById('login-btn');
-
-  errEl.classList.add('hidden');
-  btn.disabled = true;
-  btn.querySelector('.btn-text').textContent = 'Signing in…';
-
-  try {
-    const res  = await fetch(`${API}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include',
-    });
-    let data;
-    const contentType = res.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      data = await res.json();
-    } else {
-      const text = await res.text();
-      throw new Error(`Server Error: ${res.status} - ${text.substring(0, 50)}...`);
-    }
-    if (!res.ok) throw new Error(data.message || 'Login failed');
-
-    authToken = data.token;
-    localStorage.setItem('token', authToken);
-    document.getElementById('user-email-display').textContent = email;
-    showDashboard();
-    fetchMembers();
-  } catch (err) {
-    errEl.textContent = err.message;
-    errEl.classList.remove('hidden');
-  } finally {
-    btn.disabled = false;
-    btn.querySelector('.btn-text').textContent = 'Sign In';
-  }
-}
-
-async function handleRegister(e) {
-  e.preventDefault();
-  const email    = document.getElementById('reg-email').value.trim();
-  const password = document.getElementById('reg-password').value;
-  const errEl    = document.getElementById('register-error');
-  const sucEl    = document.getElementById('register-success');
-  const btn      = document.getElementById('register-btn');
-
-  errEl.classList.add('hidden');
-  sucEl.classList.add('hidden');
-  btn.disabled = true;
-  btn.querySelector('.btn-text').textContent = 'Creating…';
-
-  try {
-    const res  = await fetch(`${API}/api/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include',
-    });
-    
-    let data;
-    const contentType = res.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      data = await res.json();
-    } else {
-      const text = await res.text();
-      throw new Error(`Server Error: ${res.status} - ${text.substring(0, 50)}...`);
-    }
-
-    if (!res.ok) throw new Error(data.message || (data.errors && data.errors[0].msg) || 'Registration failed');
-
-    authToken = data.token;
-    localStorage.setItem('token', authToken);
-    sucEl.textContent = '✓ Account created! Redirecting…';
-    sucEl.classList.remove('hidden');
-    document.getElementById('user-email-display').textContent = email;
-    setTimeout(() => { showDashboard(); fetchMembers(); }, 1000);
-  } catch (err) {
-    errEl.textContent = err.message;
-    errEl.classList.remove('hidden');
-  } finally {
-    btn.disabled = false;
-    btn.querySelector('.btn-text').textContent = 'Create Account';
-  }
-}
-
-function handleLogout() {
-  authToken = '';
-  localStorage.removeItem('token');
-  allMembers = [];
-  showAuth();
-}
-
-/* ────── NAV ────── */
-function showDashboard() {
-  document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('dashboard-screen').classList.remove('hidden');
-}
-function showAuth() {
-  document.getElementById('dashboard-screen').classList.add('hidden');
-  document.getElementById('auth-screen').classList.remove('hidden');
-}
 
 /* ────── MEMBERS API ────── */
 async function apiFetch(path, opts = {}) {
   opts.headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${authToken}`,
     ...(opts.headers || {}),
   };
-  opts.credentials = 'include';
   const res = await fetch(`${API}${path}`, opts);
-  if (res.status === 401 || res.status === 403) { handleLogout(); throw new Error('Session expired'); }
   return res;
 }
 
@@ -293,8 +175,5 @@ function formatDate(d) {
 
 /* ────── INIT ────── */
 (function init() {
-  if (authToken) {
-    showDashboard();
-    fetchMembers();
-  }
+  fetchMembers();
 })();

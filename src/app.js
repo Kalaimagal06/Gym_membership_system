@@ -6,9 +6,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 
 const { pool } = require('./config/database');
-const authRoutes = require('./routes/auth');
 const memberRoutes = require('./routes/members');
-const { authenticateToken } = require('./middleware/authenticateToken');
 
 dotenv.config();
 
@@ -25,8 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/members', authenticateToken, memberRoutes);
+app.use('/api/members', memberRoutes);
 
 // Fallback to index.html for SPA routes
 app.get('*', (req, res) => {
