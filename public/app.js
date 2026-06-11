@@ -31,7 +31,14 @@ async function handleLogin(e) {
       body: JSON.stringify({ email, password }),
       credentials: 'include',
     });
-    const data = await res.json();
+    let data;
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      throw new Error(`Server Error: ${res.status} - ${text.substring(0, 50)}...`);
+    }
     if (!res.ok) throw new Error(data.message || 'Login failed');
 
     authToken = data.token;
@@ -68,7 +75,16 @@ async function handleRegister(e) {
       body: JSON.stringify({ email, password }),
       credentials: 'include',
     });
-    const data = await res.json();
+    
+    let data;
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      throw new Error(`Server Error: ${res.status} - ${text.substring(0, 50)}...`);
+    }
+
     if (!res.ok) throw new Error(data.message || (data.errors && data.errors[0].msg) || 'Registration failed');
 
     authToken = data.token;
